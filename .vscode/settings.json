@@ -1,8 +1,12 @@
 {
-	"python.pythonPath": "/home/guipatriota/anaconda3/envs/IA_FAKE_NEWS_ANALYSER/bin/python",
+	"python.pythonPath": "/home/guipatriota/anaconda3/bin/python",
 	"python.venvPath": "~/anaconda3/envs, ~/.cache/pypoetry/virtualenvs",
 	"python.venvFolders": [
 		"~/.cache/pypoetry/virtualenvs",
 		"~/anaconda3/envs"
-	]
+	],
+	"[python]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 4  
+	}
 }

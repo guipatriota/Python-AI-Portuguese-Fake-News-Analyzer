@@ -1,3 +1,16 @@
+# Security and key access archives
 conta.py
 credentials.json
 fakenewsanalyzergoogledrive.py
+token.pickle
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# VSCode
+PYTHON-AI-PORTUGUESE-FAKE-NEWS-ANALYZER/.vscode/settings.json
