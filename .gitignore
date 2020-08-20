@@ -12,5 +12,10 @@ token.pickle
 venv/
 ENV/
 
+#Others
+Exercício 5 - Processamento de Linguagem Natural (PLN).ipynb
+word_cloud.png
+__pycache__/
+
 # VSCode
 PYTHON-AI-PORTUGUESE-FAKE-NEWS-ANALYZER/.vscode/settings.json
