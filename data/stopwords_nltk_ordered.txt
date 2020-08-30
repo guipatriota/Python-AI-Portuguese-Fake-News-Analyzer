@@ -28,7 +28,6 @@ eles
 em
 entre
 era
-era
 eram
 essa
 essas
@@ -58,21 +57,16 @@ estivéramos
 estivéssemos
 estou
 está
-está
 estávamos
 estão
-estão
 eu
-foi
 foi
 fomos
 for
 fora
 foram
-foram
 forem
 formos
-fosse
 fosse
 fossem
 fui
@@ -102,7 +96,6 @@ houvesse
 houvessem
 houvéramos
 houvéssemos
-há
 há
 hão
 isso
@@ -147,7 +140,6 @@ que
 quem
 se
 seja
-seja
 sejam
 sejamos
 sem
@@ -156,7 +148,6 @@ serei
 seremos
 seria
 seriam
-será
 será
 serão
 seríamos
@@ -171,12 +162,10 @@ só
 também
 te
 tem
-tem
 temos
 tenha
 tenham
 tenhamos
-tenho
 tenho
 ter
 terei
@@ -189,7 +178,6 @@ teríamos
 teu
 teus
 teve
-tinha
 tinha
 tinham
 tive

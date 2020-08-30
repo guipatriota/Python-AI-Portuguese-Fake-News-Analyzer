@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 import nltk
 from nltk import tokenize
+from nltk.util import ngrams
 
 from string import punctuation
 import unidecode
@@ -28,10 +29,10 @@ def text_classifier(dataframe, text_column, classification_column):
     print("LOGISTIC REGRESSION WITH BAG OF WORDS FOR THE 50 MOST FREQUENT WORDS\n")
     
     vetorize = CountVectorizer(lowercase = False,
-                                max_features = 50)
+                                max_features = 123)
     bag_of_words = vetorize.fit_transform(dataframe[text_column])
     
-    print("The bag of words creatad has {} instances with {} words.\n".format(bag_of_words.shape[0],bag_of_words.shape[1]))
+    print("The bag of words created has {} instances with {} words.\n".format(bag_of_words.shape[0],bag_of_words.shape[1]))
     
     train, test, train_class, test_class = train_test_split(bag_of_words,
                                                                 dataframe[classification_column],
@@ -156,16 +157,17 @@ def pareto(dataframe, text_column, max_words):
     plt.show()
     return len(all_words)
 
-def pareto_tokenized(tokens, max_words):
-    # tokens = list()
-    # for news_text in dataframe[text_column]:
-    #     for word in news_text:
-    #         tokens.append(word)
+def pareto_df_tokenized(df, df_column, max_words):
+    tokens = list()
+    for news_text in df[df_column]:
+        for word in news_text:
+            tokens.append(word)
 
     frequency = nltk.FreqDist(tokens)
 
     df_frequency = pd.DataFrame({"Word": list(frequency.keys()),
-                                "Frequency": list(frequency.values())})
+                                "Frequency": list(frequency.values()),
+                            "Classification": df.name})
     #print(df_frequency.shape)
     df_frequency_huge = df_frequency.nlargest(columns = "Frequency", n = 200)
     file_name = 'words_frequency_' + time.strftime("%Y%m%d-%H%M%S") + '.txt'
@@ -176,7 +178,27 @@ def pareto_tokenized(tokens, max_words):
     plt. figure(figsize =(12,8))
     ax = sns.barplot(data = df_frequency, x = "Word", y = "Frequency", color = 'gray')
     ax.set(ylabel = "Number of appearances")
-    plt.title("Pareto")
+    plt.title("Pareto - {}".format(df.name))
+    plt.show()
+    return len(tokens)
+
+def pareto_all_tokenized(tokens, name, max_words):
+    frequency = nltk.FreqDist(tokens)
+
+    df_frequency = pd.DataFrame({"Word": list(frequency.keys()),
+                                "Frequency": list(frequency.values()),
+                            "Classification": name})
+    #print(df_frequency.shape)
+    df_frequency_huge = df_frequency.nlargest(columns = "Frequency", n = 200)
+    file_name = 'words_frequency_' + time.strftime("%Y%m%d-%H%M%S") + '.txt'
+    df_frequency_huge.to_csv(file_name)
+    df_frequency = df_frequency.nlargest(columns = "Frequency", n = max_words)
+
+    print(df_frequency_huge)
+    plt. figure(figsize =(12,8))
+    ax = sns.barplot(data = df_frequency, x = "Word", y = "Frequency", color = 'gray')
+    ax.set(ylabel = "Number of appearances")
+    plt.title("Pareto - {}".format(name))
     plt.show()
     return len(tokens)
 
