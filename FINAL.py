@@ -627,13 +627,13 @@ predicts1
 regressao_logistica.predict_proba(teste)
 
 
-# %%
-index_teste[1]
 
 
 # %%
 index_teste = classe_teste.index
 
+# %%
+index_teste[1]
 
 # %%
 predicts2_list = list()
