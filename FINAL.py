@@ -571,6 +571,23 @@ print(acuracia_tfidf_traitement_4)
 
 
 # %%
+# ATENÇÃO!!! Este processo pode causar estouro de memória quando fizermos a
+# criação do pandas DataFrame (faremos: vetor_tfidf.todense()).
+# Isto ocorre pois o vetor possui 7200 linhas (quantidades de texto) e até
+# 951841 colunas (os ngramas possíveis de 1 a 3). Como dado está no formato
+# float64, que possui 64 bits (8 Bytes), o cálculo de memória necessário é:
+# [7200 * 8/(1024^3)] * 951841 = 51,06 GB de memória necessários.
+# Para reduzir esta quantidade necessária, vamos utilizar o parâmetro
+# max_features da função TfidfVectorizer() com um valor que resulte em menos
+# da metade da memória disponível no computador, para não termos problemas.
+# Novo cálculo:
+# max_features = 8 GB / [7200 * 8/(1024^3)] = 149130
+#
+# Outra solução é não usar o max_features e ao criar o DataFrame Pandas, usar
+# pd.DataFrame.sparse.from_spmatrix(), para criar um dataframe de matriz esparsa
+
+#tfidf = TfidfVectorizer(lowercase = False, ngram_range = (1,3), max_features=149130)
+
 tfidf = TfidfVectorizer(lowercase = False, ngram_range = (1,3))
 
 vetor_tfidf = tfidf.fit_transform(news["traitement_4"])
@@ -588,15 +605,22 @@ classe_teste
 
 # %%
 #Para visualizar a matriz de frequências:
-pd.DataFrame(
-     vetor_tfidf.todense(),
-     columns = tfidf.get_feature_names())
+#pd.DataFrame(
+#     vetor_tfidf.todense(),
+#     columns = tfidf.get_feature_names())
 
+# %%
+#Para visualizar a matriz de frequências com matriz esparsa:
+# Economia de memória!
+
+pd.DataFrame.sparse.from_spmatrix(
+     vetor_tfidf,
+     columns = tfidf.get_feature_names_out())
 
 # %%
 pesos = pd.DataFrame(
     regressao_logistica.coef_[0].T, #coef_[0] é o peso de cada item e .T realiza a transposição da matriz
-    index = tfidf.get_feature_names()
+    index = tfidf.get_feature_names_out()
 )
 
 pesos.nlargest(150,0) #mostra os 10 maiores pesos (sentimentos positivos)
@@ -678,7 +702,42 @@ print("Acurácia para TF-IDF em news_text_normalized:             {:.2f}%".forma
 print("Acurácia para TF-IDF em traitement_4:                     {:.2f}%".format(100*acuracia_tfidf_traitement_4))
 print("Acurácia para TF-IDF com 1, 2 e 3 ngrams em traitement_4: {:.2f}%".format(100*acuracia_tfidf_ngrams_traitement_4))
 print("\nAcurácia para TF-IDF com 1, 2 e 3 ngrams em \ntraitement_4 mais avaliação de autor existente ou não:    {:.2f}%".format(100*acuracia_tfidf_ngrams_mais_registro_autor))
-print("\n\nProcedimento: com os textos completos, tokenizer, retirar os acentos e números, deixar tudo em minúsculas, retirar stopwords e pontuações, deixar palavras apenas com radical, realizar truncamento dos pares de notícas verdadeiras com falsas para normalizar quantidade de palavras, remontar as notícias em string e criar coluna no dataframe para o resultado deste pre-processamento. Criar coluna do DF com informação da existência ou não de authoria da notícia (0 não e 1 sim). Criar matriz de frequências TF-IDF com ngramas de 1 a 3 palavras. Usar a função train_test_split do Scikit Learn para dividir o corpus pre-tratado em 75% para treinamento e 25% para testes de precisão (usado random_state = 42). Fazer regressão logística com solver = 'lbfgs'. Realizar predição dos textos de teste com o método predict_proba, que retornará a porcentagem predita para fake e para real em um array. Com a informação da existência do autor ou não, recalcular a porcentagem com peso de 20% para a existência do autor em favor da notícia ser verdadeira e 20% menos em caso de axência de autor. Verificar qual porcentagem foi maior que 50% para sinalizar 0 à predição FAKE e 1 REAL. Importante observar que a fórmula usada para realizar a correção da porcentagem de predição é dada por peso, sendo 80% de peso para o valor predito pela regressão logística e 20% para o autor existente ou menos 20% para o não existente, premiando a existência do autor e punindo quando não possui, aumentando a distância das estimativas. Por fim, com as porcentagens recalculadas para cada texto de teste, fori usada a função accuracy_score da biblioteca Scikit Learn para calcular a nova acurácia geral do algoritmo.\n É importante observar que este algoritmo dá um passo a mais em direção às técnicas de identificação de notícias falsas criadas pelo professor Gabriel, levando em conta dois de dez passos, os da verificação da fonte. Por este motivo, a proporção de 20%/80% foi escolhido para os cálculos da média ponderada. Ainda, salientamos que nenhuma avaliação da plausabilidade ou veracidade dee fatos específicos foi adicionada, o que certamente poderá causar uma performance inferior ao calculado em um caso de uso real do mesmo. A acurácia de 97,83% é realmente um valor muito superior aos anteriormente obtidos e acreditamos que isto possa ser reflexo da grande quantidade de erros ortográficos nas notícias falsas presentes neste dataset, o que não expõe uma falha do mesmo, mas sim um padrão das fontes de criação de notícias falsas.")
+print("\n\nProcedimento: com os textos completos, tokenizer, retirar os \
+    acentos e números, deixar tudo em minúsculas, retirar stopwords e \
+    pontuações, deixar palavras apenas com radical, realizar truncamento dos \
+    pares de notícias verdadeiras com falsas para normalizar quantidade de \
+    palavras, remontar as notícias em string e criar coluna no dataframe para \
+    o resultado deste pré-processamento. Criar coluna do DF com informação da \
+    existência ou não de autoria da notícia (0 não e 1 sim). Criar matriz de \
+    frequências TF-IDF com ngramas de 1 a 3 palavras. Usar a função \
+    train_test_split do Scikit Learn para dividir o corpus pré-tratado em 75% \
+    para treinamento e 25% para testes de precisão (usado random_state = 42). \
+    Fazer regressão logística com solver = 'lbfgs'. Realizar predição dos \
+    textos de teste com o método predict_proba, que retornará a porcentagem \
+    predita para fake e para real em um array. Com a informação da existência \
+    do autor ou não, recalcular a porcentagem com peso de 20% para a existência \
+    do autor em favor da notícia ser verdadeira e 20% menos em caso de ausência \
+    de autor. Verificar qual porcentagem foi maior que 50% para sinalizar 0 à \
+    predição FAKE e 1 REAL. Importante observar que a fórmula usada para \
+    realizar a correção da porcentagem de predição é dada por peso, sendo 80% \
+    de peso para o valor predito pela regressão logística e 20% para o autor \
+    existente ou menos 20% para o não existente, premiando a existência do \
+    autor e punindo quando não possui, aumentando a distância das estimativas. \
+    Por fim, com as porcentagens recalculadas para cada texto de teste, foi \
+    usada a função accuracy_score da biblioteca Scikit Learn para calcular a \
+    nova acurácia geral do algoritmo.\n \
+    É importante observar que este algoritmo dá um passo a mais em direção às \
+    técnicas de identificação de notícias falsas criadas pelo professor Gabriel, \
+    levando em conta dois de dez passos, os da verificação da fonte. Por este \
+    motivo, a proporção de 20%/80% foi escolhido para os cálculos da média \
+    ponderada. Ainda, salientamos que nenhuma avaliação da plausabilidade ou \
+    veracidade de fatos específicos foi adicionada, o que certamente poderá \
+    causar uma performance inferior ao calculado em um caso de uso real do \
+    mesmo. A acurácia de 97,83% é realmente um valor muito superior aos \
+    anteriormente obtidos e acreditamos que isto possa ser reflexo da grande \
+    quantidade de erros ortográficos nas notícias falsas presentes neste \
+    dataset, o que não expõe uma falha do mesmo, mas sim um padrão das fontes \
+    de criação de notícias falsas.")
 
 
 # %%
@@ -696,4 +755,150 @@ _, fake_words, len_fake_words = fna.word_cloud_fake(news, "traitement_4", "class
 # %%
 _, real_words, len_real_words = fna.word_cloud_real(news, "traitement_4", "classification")
 
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+
+# %% [markdown]
+# Testes de context free grammar (CFG):
+
+# %%
+from nltk.parse.generate import generate, demo_grammar
+from nltk import CFG
+from nltk.corpus import floresta
+
+import nltk
+# %%
+grammar = CFG.fromstring(demo_grammar)
+print(grammar)
+
+# %%
+demo_grammar
+
+# %%
+floresta.tagged_words()
+
+# %%
+floresta.words()
+
+# %%
+def simplifica_tag(t):
+    if "+" in t:
+        return t[t.index("+")+1:]
+    else:
+        return t
+    
+# %%
+twords = floresta.tagged_words()
+twords = [(w.lower(), simplifica_tag(t)) for (w,t) in twords]
+twords[:10]
+
+# %%
+words = floresta.words()
+len(words)
+
+# %%
+fd = nltk.FreqDist(words)
+len(fd)
+
+# %%
+fd.max()
+
+# %%
+tags = [simplifica_tag(tag) for (word,tag) in floresta.tagged_words()]
+tags
+
+# %%
+fd = nltk.FreqDist(tags)
+tags
+
+# %%
+list(fd.keys())[:20]
+# %%
+floresta.sents()
+
+# %%
+floresta.tagged_sents()
+
+# %%
+floresta.parsed_sents()
+
+# %%
+psents = floresta.parsed_sents()
+psents[142].draw()
+# %%
+floresta.parsed_sents()[538].draw()
+# %%
+grammar = """"""""
+
+ruleset = set(rule for tree in psents[:10] 
+           for rule in tree.productions())
+
+for rule in ruleset:
+        grammar += str(rule).format
+
+# %%
+production = []
+for tree in psents[:10]:
+    production += tree.productions()
+S = nltk.Nonterminal("S")
+grammar = nltk.induce_pcfg(S, production)
+
+# %%
+grammar1 = nltk.CFG.fromstring(grammar)
+# %%
+texto = 'Teste de sentença completa.'
+sentencas = nltk.sent_tokenize(texto)
+print(sentencas)
+palavras = nltk.word_tokenize(texto)
+print(palavras)
+
+# %%
+nltk.pos_tag(texto)
+
+# %%
+nltk.pos_tag(sentencas)
+
+# %%
+nltk.pos_tag(palavras)
+# %%
+nltk.pos_tag(palavras, tagset='universal')
+
+# %%
+nltk.pos_tag(palavras, tagset='')
+
+# %%
+nltk.help.floresta_tagset()
+# %%
+nltk.corpus.mac_morpho.tagged_words()
+
+# %%
+
+# OBSERVAÇÃO: exemplo de desempacotamento das tuplas de palavra e tag:
+[[word for word in sents] for sents in floresta.tagged_sents()[1]]
+
+# %%
+# Criação de tagged sentences limpas a partir das tagged_sents sujas de floresta:
+
+floresta_tagged_sents_original = floresta.tagged_sents()
+
+floresta_tagged_sents_limpa = [[(w.lower(), simplifica_tag(t)) for (w,t) in [word for word in sents]] for sents in floresta_tagged_sents_original]
+
+floresta_tagged_sents_limpa[:10]
+
+# %%
+# Comparação dos resultados:
+print('Tagged Sentences original:\n',floresta_tagged_sents_original[0],'\n\n')
+print('Tagged Sentences limpa:\n', floresta_tagged_sents_limpa[0])
+
+# %%
+floresta.parsed_sents()[5].draw()
+# %%
 
