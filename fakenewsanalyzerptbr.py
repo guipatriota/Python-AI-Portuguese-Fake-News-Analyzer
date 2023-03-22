@@ -25,8 +25,8 @@ import seaborn as sns
 
 def text_classifier(dataframe, text_column, classification_column):
     print("====================================================================")
-    print("============================== START ===============================\n")
-    print("LOGISTIC REGRESSION WITH BAG OF WORDS FOR THE 50 MOST FREQUENT WORDS\n")
+    print("============================== START =====================-==========\n")
+    print("LOGISTIC REGRESSION WITH BAG OF WORDS FOR THE 123 MOST FREQUENT WORDS\n")
     
     vetorize = CountVectorizer(lowercase = False,
                                 max_features = 123)
