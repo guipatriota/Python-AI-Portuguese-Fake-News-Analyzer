@@ -1,0 +1,12 @@
+pandas == 2.2.2
+natsort
+numpy
+nltk
+unidecode
+matplotlib
+scikit-learn
+Pillow
+wordcloud
+seaborn
+ipykernel
+tabulate

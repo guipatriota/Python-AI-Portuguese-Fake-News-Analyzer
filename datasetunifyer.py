@@ -43,16 +43,15 @@ def corpus_to_df(path, metadata_columns):
             "\x97": "",
             "\t": ""
         }
-        #print(key for key in unicodes_to_strip)
         for file_name in filenames:
             with open(file_name, 'r', encoding='utf8') as text:
                 news = text.read()
-                for key in unicodes_to_strip:
-                    news = news.replace(key, unicodes_to_strip[key])
+                for key, value in unicodes_to_strip.items():
+                    news = news.replace(key, value)
                 texts.append(news)
 
         text_df = pd.DataFrame(texts, columns=[column_name])
-        
+
         return text_df
 
     def load_meta(path, metadata_columns):
@@ -60,15 +59,21 @@ def corpus_to_df(path, metadata_columns):
         meta_filenames = []
         meta_tags = []
 
-        for filename in os.listdir(os.path.join(path, 'full_texts', 'true-meta-information')):
+        for filename in os.listdir(os.path.join(path, 'full_texts',
+                                                'true-meta-information')):
             meta_ids.append(filename.replace('-meta.txt', '-REAL'))
-            meta_filenames.append(os.path.join(path, 'full_texts', 'true-meta-information', filename))
+            meta_filenames.append(os.path.join(path, 'full_texts',
+                                               'true-meta-information',
+                                               filename))
             meta_tags.append('REAL')
 
         # From the fake news folder
-        for filename in os.listdir(os.path.join(path, 'full_texts', 'fake-meta-information')):
+        for filename in os.listdir(os.path.join(path, 'full_texts',
+                                                'fake-meta-information')):
             meta_ids.append(filename.replace('-meta.txt', '-FAKE'))
-            meta_filenames.append(os.path.join(path, 'full_texts','fake-meta-information', filename))
+            meta_filenames.append(os.path.join(path, 'full_texts',
+                                               'fake-meta-information',
+                                               filename))
             meta_tags.append('FAKE')
 
         meta_ids, meta_filenames, meta_tags = (list(t) for t in zip(*sorted(zip(
@@ -91,18 +96,24 @@ def corpus_to_df(path, metadata_columns):
         #print(metadata_columns)
         return meta_df
 
-    news_text_full_df = load_corpus_text(os.path.join(path, 'full_texts'), 'news_text_full')
-    news_text_normalized_df = load_corpus_text(os.path.join(path, 'size_normalized_texts'),
+    news_text_full_df = load_corpus_text(os.path.join(path, 'full_texts'),
+                                         'news_text_full')
+    news_text_normalized_df = load_corpus_text(os.path.join(
+                                                    path,
+                                                    'size_normalized_texts'),
                                                'news_text_normalized')
     news_meta_df = load_meta(path, metadata_columns)
 
-    result_df = pd.concat([news_text_full_df, news_text_normalized_df, news_meta_df], axis=1)
+    result_df = pd.concat([news_text_full_df,
+                           news_text_normalized_df,
+                           news_meta_df], axis=1)
     #print(result_df)
     #print(ns.natsorted(result_df['Id'].unique()))
-    
-    result_df['Id'] = pd.Categorical(result_df['Id'],
-                                     ordered=True,
-                                     categories=ns.natsorted(result_df['Id'].unique()))
+
+    result_df['Id'] = pd.Categorical(
+                            result_df['Id'],
+                            ordered=True,
+                            categories=ns.natsorted(result_df['Id'].unique()))
     result_df = result_df.sort_values('Id')
 
     result_df = result_df.set_index('Id')
@@ -137,24 +148,27 @@ def corpus_df ():
         'emotiveness',
         'diversity']
 
-    corpus_df = corpus_to_df(os.path.join('data'), metadata_columns)
-    return corpus_df
+    corpus_df_data = corpus_to_df(os.path.join('data'), metadata_columns)
+    return corpus_df_data
 
 def corpus_arff ():
-    corpus_arff = corpus_df().reset_index()
-    corpus_arff.astype({'Id': 'object'}).dtypes
-    corpus_arff.index.name = "id"
-    pandas2arff(corpus_arff, os.path.join('data', 'fakeBR.arff'), wekaname="FakeBRCorpus", cleanstringdata=False, cleannan=False)
-    return corpus_arff
+    corpus_arff_data = corpus_df().reset_index()
+    corpus_arff_data.astype({'Id': 'object'}).dtypes
+    corpus_arff_data.index.name = "id"
+    pandas2arff(corpus_arff_data,
+                os.path.join('data', 'fakeBR.arff'),
+                wekaname="FakeBRCorpus",
+                cleanstringdata=False,
+                cleannan=False)
+    return corpus_arff_data
 
 def main():
-    
-
     #print(corpus_df.head(50))
     #print(corpus_df.loc['24-FAKE', 'news_text_full'])
 
     # CSV dataset creation:
-    corpus_df().to_csv(os.path.join('data','real_and_fake_news_corpus_pt_br.csv'))
+    corpus_df().to_csv(os.path.join('data',
+                                    'real_and_fake_news_corpus_pt_br.csv'))
 
     # WEKA ARFF dataset creation:
     corpus_arff()

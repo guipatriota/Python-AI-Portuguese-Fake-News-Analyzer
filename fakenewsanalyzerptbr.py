@@ -1,10 +1,59 @@
 #%%
-import pandas as pd
-import os
-import numpy as np
-import random
+"""
+Fake News Analyzer in Portuguese (Brazil) - fakenewsanalyzerptbr.py
 
+This module provides a set of tools to analyze and classify fake news in Portuguese (Brazil) using the "Real and Fake News Dataset" from Kaggle.
+It implements natural language processing (NLP) techniques and machine learning algorithms to classify news as fake or real, visualize word distributions, and generate word clouds.
+
+Key Features:
+--------------
+1. **Dataset**: Utilizes a balanced dataset of 3,600 news articles (1,800 fake and 1,800 real) for training and evaluation.
+2. **Text Classification**: Uses logistic regression to classify news articles as fake or real based on word frequency.
+3. **Text Preprocessing**:
+   - Tokenization: Uses NLTK's tokenizers (`WordPunctTokenizer`, `WhitespaceTokenizer`) to split text into words.
+   - Accent Removal: Uses the `unidecode` library to remove accents and special characters.
+   - Stopword Removal: Removes common Portuguese stopwords to improve model accuracy.
+4. **Feature Engineering**: 
+   - Creates bag-of-words features using `CountVectorizer` from scikit-learn for text classification.
+   - Computes word frequencies using `FreqDist` from NLTK for analysis.
+5. **Visualization**:
+   - Generates word clouds using the `WordCloud` library to visualize the most frequent words in fake and real news articles.
+   - Creates Pareto charts using the `seaborn` library to visualize word frequency distributions.
+6. **Mask-Based Word Clouds**: Uses custom masks (images) for shaping word clouds, enhancing visual analysis.
+
+Dependencies:
+--------------
+- `pandas`: For data manipulation and dataset handling.
+- `numpy`: For numerical operations and mask creation for word clouds.
+- `scikit-learn`: For machine learning tasks including dataset splitting (`train_test_split`) and logistic regression (`LogisticRegression`).
+- `nltk`: For natural language processing tasks such as tokenization and frequency distribution.
+- `unidecode`: For removing accents and normalizing text.
+- `wordcloud`: For generating word cloud visualizations.
+- `PIL (Pillow)`: For image manipulation and using images as masks for word clouds.
+- `matplotlib`: For plotting word clouds.
+- `seaborn`: For creating Pareto charts.
+- `os`, `random`, `string`, `time`: For miscellaneous tasks such as file handling, randomization, and string manipulation.
+
+Usage:
+-------
+This module can be used for various NLP tasks including fake news detection, text preprocessing, and visualization of word frequency and distribution. It serves as a foundation for more complex NLP projects in Portuguese, especially those targeting fake news detection and analysis.
+
+Example Functions:
+-------------------
+- `text_classifier(dataframe, text_column, classification_column)`: Classifies text using logistic regression.
+- `word_cloud_complete(dataframe, text_column, classification_column)`: Generates word clouds for all news.
+- `word_cloud_fake(dataframe, text_column, classification_column)`: Generates word clouds for fake news.
+- `word_cloud_real(dataframe, text_column, classification_column)`: Generates word clouds for real news.
+- `pareto(dataframe, text_column, max_words)`: Creates a Pareto chart showing word frequency.
+
+"""
+from string import punctuation
+import os
+import random
 import time
+
+import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -12,36 +61,44 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 import nltk
 from nltk import tokenize
-from nltk.util import ngrams
 
-from string import punctuation
 import unidecode
 
-from wordcloud import WordCloud, ImageColorGenerator
+from wordcloud import WordCloud
 from PIL import Image
-from scipy.ndimage import gaussian_gradient_magnitude
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 def text_classifier(dataframe, text_column, classification_column):
-    print("====================================================================")
-    print("============================== START =====================-==========\n")
-    print("LOGISTIC REGRESSION WITH BAG OF WORDS FOR THE 123 MOST FREQUENT WORDS\n")
-    
+    """	Function to classify text using logistic regression.
+    Args:
+        dataframe: Pandas DataFrame with the dataset.
+        text_column: String with the name of the column with the text to be classified.
+        classification_column: String with the name of the column with the classification.
+    Returns:
+        accuracy: Float with the accuracy of the model.
+    """
+    max_features = 123
+    print(68*"=")
+    print(31*"=", "START",31*"=","\n")
+    print("LOGISTIC REGRESSION WITH BAG",
+          f"OF WORDS FOR THE {max_features} MOST FREQUENT WORDS\n")
+
     vetorize = CountVectorizer(lowercase = False,
-                                max_features = 123)
+                                max_features = max_features)
     bag_of_words = vetorize.fit_transform(dataframe[text_column])
-    
-    print("The bag of words created has {} instances with {} words.\n".format(bag_of_words.shape[0],bag_of_words.shape[1]))
-    
+
+    print(f"The bag of words created has {bag_of_words.shape[0]}",
+          f"instances with {bag_of_words.shape[1]} words.\n")
+
     train, test, train_class, test_class = train_test_split(bag_of_words,
                                                                 dataframe[classification_column],
                                                                 random_state = 42)
-    
-    print("Will be used {} instances for training.\n".format(train.shape[0]))
-    print("Will be used {} instances for testing the trained model.\n".format(test.shape[0]))
+
+    print(f"Will be used {train.shape[0]} instances for training.\n")
+    print(f"Will be used {test.shape[0]} instances for testing the trained model.\n")
     sparse_matrix = pd.DataFrame.sparse.from_spmatrix(bag_of_words,
-                                                       columns = vetorize.get_feature_names())
+                                                       columns = vetorize.get_feature_names_out())
     print(sparse_matrix)
 
     logistic_regression = LogisticRegression(solver = 'lbfgs')
@@ -67,8 +124,8 @@ def word_cloud_complete(dataframe, text_column, classification_column):
     #%matplotlib inline
     all_words = ' '.join([text for text in dataframe[text_column]])
     #print(all_words[:3])
-    print("   * Were computed a total of {} words from dataset.\n".format(len(all_words)))
-    
+    print("   * Were computed a total of {} words from dataset.\n".format(len(all_words.split())))
+
     #infinity_mask = np.array(Image.open(os.path.join("data", "img", "infinity_solid_mask.png")))
     #cloud_mask = np.array(Image.open(os.path.join("data", "img", "cloud_mask.png")))
     mapa_brasil_mask = np.array(Image.open(os.path.join("data", "img", "mapa_brasil_mask.png")))
@@ -86,14 +143,16 @@ def word_cloud_complete(dataframe, text_column, classification_column):
     plt.imshow(cloud_of_words, interpolation = 'bilinear')
     plt.axis('off')
     plt.show()
-    return cloud_of_words, all_words, len(all_words)
+    return cloud_of_words, all_words, len(all_words.split())
 
 def word_cloud_fake(dataframe, text_column, classification_column):
     news = dataframe.query(classification_column + " == 0")
     all_words = ' '.join([text for text in news[text_column]])
-    print("   * Were computed a total of {} words from dataset.\n".format(len(all_words)))
+    print(f"   * Were computed a total of {len(all_words.split())} words from dataset.\n")
     #thumbs_down_mask = np.array(Image.open(os.path.join("data", "img", "thumbs_down_mask.png")))
-    mirrored_thumbs_down_mask = np.array(Image.open(os.path.join("data", "img", "thumbs_down_mask_3.png")))
+    mirrored_thumbs_down_mask = np.array(Image.open(os.path.join("data",
+                                                                 "img",
+                                                                 "thumbs_down_mask_3.png")))
 
     cloud_of_words = WordCloud(width=1080,
                                height = 1080,
@@ -109,12 +168,12 @@ def word_cloud_fake(dataframe, text_column, classification_column):
     plt.imshow(cloud_of_words, interpolation = 'bilinear')
     plt.axis('off')
     plt.show()
-    return cloud_of_words, all_words, len(all_words)
+    return cloud_of_words, all_words, len(all_words.split())
 
 def word_cloud_real(dataframe, text_column, classification_column):
     news = dataframe.query(classification_column + " == 1")
     all_words = ' '.join([text for text in news[text_column]])    
-    print("   * Were computed a total of {} words from dataset.\n".format(len(all_words)))
+    print("   * Were computed a total of {} words from dataset.\n".format(len(all_words.split())))
     thumbs_up_mask = np.array(Image.open(os.path.join("data", "img", "thumbs_up_mask.png")))
 
     cloud_of_words = WordCloud(width=1080,
@@ -131,7 +190,7 @@ def word_cloud_real(dataframe, text_column, classification_column):
     plt.imshow(cloud_of_words, interpolation = 'bilinear')
     plt.axis('off')
     plt.show()
-    return cloud_of_words, all_words, len(all_words)
+    return cloud_of_words, all_words, len(all_words.split())
 
 def pareto(dataframe, text_column, max_words):
     all_words = ' '.join([text for text in dataframe[text_column]])
@@ -155,7 +214,7 @@ def pareto(dataframe, text_column, max_words):
     ax.set(ylabel = "Number of appearances")
     plt.title("Pareto")
     plt.show()
-    return len(all_words)
+    return len(all_words.split())
 
 def pareto_df_tokenized(df, df_column, max_words):
     tokens = list()
@@ -204,8 +263,8 @@ def pareto_all_tokenized(tokens, name, max_words):
 
 def main():
     # Import CSV dataset file to Pandas DataFrame:
-    print("====================================================================")
-    print("========================== SCRIPT START ============================\n")
+    print(68*"=")
+    print(27*"=","SCRIPT START", 27*"=","\n")
     path = 'data'
     dataset_csv = 'real_and_fake_news_corpus_pt_br.csv'
     print("Importing CSV dataset '{}' from folder '{}':\n".format(dataset_csv, path))
@@ -215,24 +274,28 @@ def main():
     classification = news["Tag"].replace(["FAKE", "REAL"], [0, 1])
     news["classification"] = classification
 
-    print("The logistic regression resulted in {}% of accuracy.\n".format(100*text_classifier(news, "news_text_normalized", "classification")))
+    print("The logistic regression resulted in",
+          100*text_classifier(news, 'news_text_normalized', 'classification'),
+          "% of accuracy.\n")
     
 
-    print("====================================================================\n")
+    print(68*"=","\n")
     print("Word cloud without any data preprocessing.\n")
     print("Word cloud of all news:\n")
-    _, all_words, _ = word_cloud_complete(news, "news_text_normalized", "classification")
+    _, all_words, _ = word_cloud_complete(news,
+                                          "news_text_normalized", 
+                                          "classification")
     print("\n\n\nWord cloud of real news:\n")
     word_cloud_real(news, "news_text_normalized", "classification")
     print("\n\n\nWord cloud of fake news:\n")
     word_cloud_fake(news, "news_text_normalized", "classification")
-    print("\n\n\n====================================================================\n")
+    print("\n\n\n"+68*"="+"\n")
     #plt.show(block=False)
     #input('press <ENTER> to continue')
     #plt.savefig('word_cloud.png')
 
     #Tokenization of dataset
-    print("====================================================================")
+    print(68*"=")
     print("TOKENIZATION STARTED")
     token_space = tokenize.WhitespaceTokenizer()
     token_phrase = token_space.tokenize(all_words)
@@ -244,7 +307,11 @@ def main():
     print(df_frequency.nlargest(columns = "Frequency", n = 10))
 
     plt. figure(figsize =(12,8))
-    ax = sns.barplot(data = df_frequency.nlargest(columns = "Frequency", n = 30), x = "Word", y = "Frequency", color = 'gray')
+    ax = sns.barplot(data = df_frequency.nlargest(columns = "Frequency",
+                                                  n = 30),
+                     x = "Word",
+                     y = "Frequency",
+                     color = 'gray')
     ax.set(ylabel = "Number of appearances")
     plt.show()
 
@@ -285,7 +352,9 @@ def main():
                               '"."""',
                               '),',
                               '".']
-    stopwords_with_punctuation = punctuation_list + stopwords + personalized_stopwords
+    stopwords_with_punctuation = (punctuation_list +
+                                  stopwords +
+                                  personalized_stopwords)
     token_punct = tokenize.WordPunctTokenizer()
     clean_phrase = list()
     for text in news["traitement_1"]:
@@ -299,11 +368,14 @@ def main():
     news["traitement_2"] = clean_phrase
 
     no_accent = [unidecode.unidecode(text) for text in news["traitement_2"]]
-    stopwords_with_punctuation_no_accent = [unidecode.unidecode(text) for text in stopwords_with_punctuation]
+    stopwords_with_punctuation_no_accent = [unidecode.unidecode(text)
+                                            for text in
+                                            stopwords_with_punctuation]
 
     news["traitement_3"] = no_accent
 
-    no_accent_news_text_normalized = [unidecode.unidecode(text) for text in news["news_text_normalized"]]
+    no_accent_news_text_normalized = [unidecode.unidecode(text)
+                                      for text in news["news_text_normalized"]]
 
     news["traitement_4"] = no_accent_news_text_normalized
 

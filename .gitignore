@@ -1,3 +1,4 @@
+*.txt
 # Security and key access archives
 conta.py
 credentials.json
